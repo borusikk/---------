@@ -1,0 +1,218 @@
+{% extends 'base.html' %} {% block title %}📊 Рейтинг кафедр{% endblock title %}
+{% block content %}
+<main class="container py-4">
+  <header class="text-center mb-4">
+    <h1 class="h2">📊 Рейтинг кафедр ХНУРЕ</h1>
+    <p class="text-muted">Порівняльна оцінка кафедр університету</p>
+  </header>
+
+  <!-- Статистика -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="p-3 bg-light rounded text-center">
+        <i class="fas fa-graduation-cap mb-2"></i>
+        <div class="h4">{{ departments|length }}</div>
+        <small class="text-muted">Кафедр</small>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="p-3 bg-light rounded text-center">
+        <i class="fas fa-star mb-2"></i>
+        <div class="h4">{{ departments.0.name }}</div>
+        <small class="text-muted">Лідер</small>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="p-3 bg-light rounded text-center">
+        <i class="fas fa-user-tie mb-2"></i>
+        <div class="h4">{{ total_professors|default:"500+" }}</div>
+        <small class="text-muted">Викладачів</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Фильтры -->
+  <div class="row g-2 mb-4">
+    <div class="col-md-6">
+      <input
+        type="text"
+        id="department-search"
+        class="form-control"
+        placeholder="🔍 Пошук кафедри"
+      />
+    </div>
+    <div class="col-md-6">
+      <select id="faculty-filter" class="form-select">
+        <option value="">📚 Всі факультети</option>
+        {% for faculty in faculties %}
+        <option value="{{ faculty.id }}">{{ faculty.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <!-- Таблица рейтинга -->
+  <div class="table-responsive d-none d-lg-block">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Кафедра</th>
+          <th>Факультет</th>
+          <th class="text-center">Професіоналізм</th>
+          <th class="text-center">Пояснення</th>
+          <th class="text-center">Ставлення</th>
+          <th class="text-center">Рейтинг</th>
+          <th class="text-center">Викладачі</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for department in departments %}
+        <tr
+          class="{% if forloop.first %}table-warning{% endif %}"
+          data-faculty-id="{{ department.faculty.id }}"
+        >
+          <td class="text-center">{{ forloop.counter }}</td>
+          <td>
+            <a href="{% url 'department_detail' department.id %}"
+              >{{ department.name }}</a
+            >
+          </td>
+          <td>
+            <span class="badge bg-light text-dark"
+              >{{ department.faculty.name }}</span
+            >
+          </td>
+          <td class="text-center">
+            {{ department.avg_professionalism|default:"—"|floatformat:1 }} ⭐
+          </td>
+          <td class="text-center">
+            {{ department.avg_clarity|default:"—"|floatformat:1 }} ⭐
+          </td>
+          <td class="text-center">
+            {{ department.avg_attitude|default:"—"|floatformat:1 }} ⭐
+          </td>
+          <td class="text-center fw-bold">
+            {{ department.avg_rating|default:"—"|floatformat:1 }} ⭐
+          </td>
+          <td class="text-center">{{ department.professor_count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Мобильные карточки -->
+  <div class="d-lg-none">
+    {% for department in departments %}
+    <div
+      class="card mb-3 department-card"
+      data-faculty-id="{{ department.faculty.id }}"
+    >
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+          <h5 class="card-title">
+            <span class="badge bg-secondary me-1">{{ forloop.counter }}</span>
+            <a href="{% url 'department_detail' department.id %}"
+              >{{ department.name }}</a
+            >
+          </h5>
+          <span class="badge bg-light text-dark"
+            >{{ department.faculty.name }}</span
+          >
+        </div>
+        <div class="row g-2 text-center mb-2">
+          <div class="col-4">
+            <small class="d-block text-muted">Професіоналізм</small>
+            <div>
+              {{ department.avg_professionalism|default:"—"|floatformat:1 }} ⭐
+            </div>
+          </div>
+          <div class="col-4">
+            <small class="d-block text-muted">Пояснення</small>
+            <div>{{ department.avg_clarity|default:"—"|floatformat:1 }} ⭐</div>
+          </div>
+          <div class="col-4">
+            <small class="d-block text-muted">Ставлення</small>
+            <div>
+              {{ department.avg_attitude|default:"—"|floatformat:1 }} ⭐
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-muted"
+            >{{ department.professor_count }} викладачів</small
+          >
+          <div class="fw-bold">
+            {{ department.avg_rating|default:"—"|floatformat:1 }} ⭐
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</main>
+
+<style>
+  .department-card {
+    transition: transform 0.2s;
+  }
+  .department-card:hover {
+    transform: translateY(-2px);
+  }
+  @media (max-width: 768px) {
+    .container {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("department-search");
+    const facultyFilter = document.getElementById("faculty-filter");
+    const tableRows = document.querySelectorAll("tbody tr");
+    const cards = document.querySelectorAll(".department-card");
+
+    function filterItems() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const selectedFaculty = facultyFilter.value; // Убираем toLowerCase()
+
+      // Фильтрация для таблицы
+      tableRows.forEach((row) => {
+        const departmentName = row
+          .querySelector("td:nth-child(2)")
+          .textContent.toLowerCase();
+        const facultyId = row.getAttribute("data-faculty-id");
+
+        const matchesSearch = departmentName.includes(searchTerm);
+        const matchesFaculty =
+          !selectedFaculty || facultyId === selectedFaculty;
+
+        row.style.display = matchesSearch && matchesFaculty ? "" : "none";
+      });
+
+      // Фильтрация для мобильных карточек
+      cards.forEach((card) => {
+        const departmentName = card
+          .querySelector(".card-title a")
+          .textContent.toLowerCase();
+        const facultyId = card.getAttribute("data-faculty-id");
+
+        const matchesSearch = departmentName.includes(searchTerm);
+        const matchesFaculty =
+          !selectedFaculty || facultyId === selectedFaculty;
+
+        card.style.display = matchesSearch && matchesFaculty ? "" : "none";
+      });
+    }
+
+    searchInput.addEventListener("input", filterItems);
+    facultyFilter.addEventListener("change", filterItems);
+
+    // Инициализируем фильтрацию при загрузке
+    filterItems();
+  });
+</script>
+{% endblock content %}

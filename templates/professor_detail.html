@@ -1,0 +1,503 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ professor.name }} - Оцінка викладача{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Хлебные крошки -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Головна</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ professor.name }}</li>
+        </ol>
+    </nav>
+    
+    <!-- Блок информации о преподавателе -->
+    <div class="card shadow-sm p-0 mb-5 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <!-- Фото преподавателя с градиентным бэкграундом -->
+                <div class="col-lg-4 position-relative">
+                    <div class="h-100 d-flex align-items-center justify-content-center" 
+                         style="background: linear-gradient(135deg, var(--primary-color), var(--dark-color)); min-height: 250px;">
+                        <img src="{{ professor.photo.url }}" 
+                             class="img-fluid rounded-circle border border-4 border-white shadow" 
+                             alt="Фото {{ professor.name }}" 
+                             style="width: 200px; height: 200px; object-fit: cover;">
+                    </div>
+                </div>
+                
+                <!-- Информация о преподавателе -->
+                <div class="col-lg-8">
+                    <div class="p-4 p-lg-5">
+                        <h1 class="display-5 fw-bold mb-2">{{ professor.name }}</h1>
+                        
+                        <!-- Кафедры -->
+                        <div class="mb-3">
+                            <p class="text-muted mb-2">Викладає на кафедрах:</p>
+                            {% for department in professor.departments.all %}
+                                <a href="{% url 'department_detail' department.id %}" 
+                                   class="badge bg-primary text-decoration-none mb-1 me-1 py-2 px-3">
+                                    <i class="fas fa-building me-1"></i> {{ department.name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Средний рейтинг -->
+                        <div class="mt-4">
+                            <h4 class="mb-3">Загальний рейтинг</h4>
+                            <div class="d-flex align-items-center">
+                                <div class="display-4 me-3 fw-bold">
+                                    {{ professor_avg_rating|default:"N/A"|floatformat:1 }}
+                                </div>
+                                <div class="rating-stars fs-3">
+                                    {% if professor_avg_rating %}
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= professor_avg_rating|floatformat:0|add:"0" %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif forloop.counter <= professor_avg_rating|floatformat:0|add:"0.5" %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">Немає оцінок</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Детальные оценки -->
+                            <div class="row mt-3">
+                                <div class="col-md-4 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 fw-medium">Професіоналізм:</span>
+                                        <div class="rating-stars">
+                                            {{ avg_professionalism|default:"N/A"|floatformat:1 }} <i class="fas fa-star"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 fw-medium">Зрозумілість:</span>
+                                        <div class="rating-stars">
+                                            {{ avg_clarity|default:"N/A"|floatformat:1 }} <i class="fas fa-star"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 fw-medium">Ставлення:</span>
+                                        <div class="rating-stars">
+                                            {{ avg_attitude|default:"N/A"|floatformat:1 }} <i class="fas fa-star"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Блок формы отзыва -->
+        <div class="col-lg-4 order-lg-2 mb-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px; z-index: 999;">
+                <div class="card-header bg-white py-3">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-edit me-2 text-primary"></i>Залишити відгук
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="feedback-form">
+                        {% csrf_token %}
+                        
+                        <!-- Стилизованная форма -->
+                        <div class="mb-3">
+                            <label for="id_professionalism" class="form-label fw-medium">Професіоналізм:</label>
+                            <div class="rating-select d-flex">
+                                {% for i in "12345" %}
+                                <div class="form-check form-check-inline flex-fill text-center">
+                                    <input class="form-check-input d-none" type="radio" name="professionalism" 
+                                           id="prof{{ i }}" value="{{ i }}" 
+                                           {% if form.professionalism.value|stringformat:"s" == i %}checked{% endif %}>
+                                    <label class="form-check-label rating-label" for="prof{{ i }}">
+                                        <i class="far fa-star rating-star" data-rating="{{ i }}"></i>
+                                        <span class="d-block">{{ i }}</span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_clarity" class="form-label fw-medium">Зрозумілість матеріалу:</label>
+                            <div class="rating-select d-flex">
+                                {% for i in "12345" %}
+                                <div class="form-check form-check-inline flex-fill text-center">
+                                    <input class="form-check-input d-none" type="radio" name="clarity" 
+                                           id="clarity{{ i }}" value="{{ i }}" 
+                                           {% if form.clarity.value|stringformat:"s" == i %}checked{% endif %}>
+                                    <label class="form-check-label rating-label" for="clarity{{ i }}">
+                                        <i class="far fa-star rating-star" data-rating="{{ i }}"></i>
+                                        <span class="d-block">{{ i }}</span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_attitude" class="form-label fw-medium">Ставлення до студентів:</label>
+                            <div class="rating-select d-flex">
+                                {% for i in "12345" %}
+                                <div class="form-check form-check-inline flex-fill text-center">
+                                    <input class="form-check-input d-none" type="radio" name="attitude" 
+                                           id="attitude{{ i }}" value="{{ i }}" 
+                                           {% if form.attitude.value|stringformat:"s" == i %}checked{% endif %}>
+                                    <label class="form-check-label rating-label" for="attitude{{ i }}">
+                                        <i class="far fa-star rating-star" data-rating="{{ i }}"></i>
+                                        <span class="d-block">{{ i }}</span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_comment" class="form-label fw-medium">Коментар:</label>
+                            <textarea class="form-control" id="id_comment" name="comment" rows="4" 
+                                     placeholder="Поділіться своїм досвідом...">{{ form.comment.value }}</textarea>
+                        </div>
+
+                        {% if existing_feedback %}
+                            <button type="submit" class="btn btn-primary w-100" id="review-submit-btn">
+                                <i class="fas fa-edit me-1"></i> Змінити відгук
+                            </button>
+                        {% else %}
+                            <button type="submit" class="btn btn-success w-100" id="review-submit-btn">
+                                <i class="fas fa-paper-plane me-1"></i> Надіслати відгук
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Список отзывов -->
+        <div class="col-lg-8 order-lg-1">
+            <h3 class="mb-4">
+                <i class="fas fa-comments me-2 text-primary"></i>Відгуки студентів 
+                <span class="badge bg-secondary">{{ feedbacks|length }}</span>
+            </h3>
+            
+            {% if feedbacks %}
+                <div class="feedback-list">
+                    {% for feedback in feedbacks %}
+                        <div class="card shadow-sm mb-4 feedback-card">
+                            <div class="card-body">
+                                <!-- Аватар и имя пользователя -->
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Студент</h6>
+                                        <small class="text-muted">{{ feedback.created_at|date:"d.m.Y" }}</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Рейтинги в виде звезд -->
+                                <div class="ratings-summary row mb-3">
+                                    <div class="col-md-4 mb-2">
+                                        <small class="d-block text-muted">Професіоналізм</small>
+                                        <div class="rating-stars">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= feedback.professionalism %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <small class="d-block text-muted">Зрозумілість</small>
+                                        <div class="rating-stars">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= feedback.clarity %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <small class="d-block text-muted">Ставлення</small>
+                                        <div class="rating-stars">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= feedback.attitude %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Комментарий -->
+                                <div class="feedback-comment mb-3">
+                                    <p class="mb-0">{{ feedback.comment }}</p>
+                                </div>
+                                
+                                <!-- Лайки/дизлайки -->
+                                <div class="feedback-actions d-flex align-items-center">
+                                    <button class="btn btn-sm btn-outline-success like-btn me-2" data-id="{{ feedback.id }}">
+                                        <i class="fas fa-thumbs-up me-1"></i>
+                                        <span class="like-count">{{ feedback.likes }}</span>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger dislike-btn" data-id="{{ feedback.id }}">
+                                        <i class="fas fa-thumbs-down me-1"></i>
+                                        <span class="dislike-count">{{ feedback.dislikes }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-comment-slash text-muted fa-4x mb-3"></i>
+                        <h4>Відгуків ще немає</h4>
+                        <p class="text-muted">Будьте першим, хто залишить відгук про цього викладача!</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript для рейтингов и AJAX -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Инициализация рейтинговых звезд
+        const ratingLabels = document.querySelectorAll('.rating-label');
+        
+        ratingLabels.forEach(label => {
+            label.addEventListener('mouseenter', function() {
+                const rating = this.querySelector('.rating-star').getAttribute('data-rating');
+                const inputName = this.getAttribute('for').replace(/[0-9]/g, '');
+                
+                // Подсвечиваем звезды при наведении
+                document.querySelectorAll(`[for^="${inputName}"] .rating-star`).forEach(star => {
+                    const starRating = star.getAttribute('data-rating');
+                    if (starRating <= rating) {
+                        star.classList.remove('far');
+                        star.classList.add('fas');
+                    } else {
+                        star.classList.remove('fas');
+                        star.classList.add('far');
+                    }
+                });
+            });
+            
+            // Обработка клика на рейтинг
+            label.addEventListener('click', function() {
+                const rating = this.querySelector('.rating-star').getAttribute('data-rating');
+                const inputName = this.getAttribute('for').replace(/[0-9]/g, '');
+                
+                // Устанавливаем выбранный рейтинг
+                document.querySelector(`#${this.getAttribute('for')}`).checked = true;
+                
+                // Визуально выделяем звезды
+                document.querySelectorAll(`[for^="${inputName}"] .rating-star`).forEach(star => {
+                    const starRating = star.getAttribute('data-rating');
+                    if (starRating <= rating) {
+                        star.classList.remove('far');
+                        star.classList.add('fas');
+                    } else {
+                        star.classList.remove('fas');
+                        star.classList.add('far');
+                    }
+                });
+            });
+        });
+        
+        // Инициализация текущих значений
+        document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+            const rating = input.value;
+            const inputName = input.name;
+            
+            document.querySelectorAll(`[name="${inputName}"]`).forEach(radio => {
+                const label = document.querySelector(`label[for="${radio.id}"]`);
+                const star = label.querySelector('.rating-star');
+                
+                if (radio.value <= rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas');
+                }
+            });
+        });
+        
+        // AJAX для формы отзыва
+        const form = document.querySelector("#feedback-form");
+        const reviewBtn = document.getElementById("review-submit-btn");
+
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            
+            // Проверка заполнения формы
+            const professionalism = form.querySelector('input[name="professionalism"]:checked');
+            const clarity = form.querySelector('input[name="clarity"]:checked');
+            const attitude = form.querySelector('input[name="attitude"]:checked');
+            
+            if (!professionalism || !clarity || !attitude) {
+                alert("Будь ласка, оцініть усі параметри викладача");
+                return;
+            }
+            
+            // Отправка формы
+            reviewBtn.disabled = true;
+            reviewBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Зачекайте...';
+            
+            let formData = new FormData(form);
+
+            fetch(window.location.href, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;  // Перезагружаем страницу
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.success) {
+                    window.location.reload();
+                } else if (data && data.error) {
+                    alert(data.error);
+                    reviewBtn.disabled = false;
+                    reviewBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Надіслати відгук';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                reviewBtn.disabled = false;
+                reviewBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Надіслати відгук';
+            });
+        });
+
+        // AJAX для лайков и дизлайков
+        document.querySelectorAll(".like-btn, .dislike-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                let feedbackId = this.getAttribute("data-id");
+                let action = this.classList.contains("like-btn") ? "like" : "dislike";
+                
+                // Анимация нажатия
+                this.classList.add('active');
+
+                fetch(`/feedback/${feedbackId}/${action}/`, { 
+                    method: "POST",
+                    headers: {
+                        'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        this.querySelector("span").textContent = data.count;
+                        
+                        // Добавляем анимацию
+                        const countSpan = this.querySelector("span");
+                        countSpan.classList.add('text-pulse');
+                        setTimeout(() => {
+                            countSpan.classList.remove('text-pulse');
+                        }, 1000);
+                    }
+                    this.classList.remove('active');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    this.classList.remove('active');
+                });
+            });
+        });
+    });
+</script>
+
+<style>
+    /* Стили для рейтинговых звезд */
+    .rating-stars {
+        color: #f1c40f;
+    }
+    
+    .rating-label {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 8px 0;
+        border-radius: 4px;
+    }
+    
+    .rating-label:hover {
+        background-color: rgba(241, 196, 15, 0.1);
+    }
+    
+    /* Анимации для отзывов */
+    .feedback-card {
+        transition: all 0.3s ease;
+    }
+    
+    .feedback-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Анимация для кнопок лайк/дизлайк */
+    .like-btn.active, .dislike-btn.active {
+        transform: scale(1.1);
+    }
+    
+    .text-pulse {
+        animation: pulse 0.5s ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    
+    /* Стилизация хлебных крошек */
+    .breadcrumb-item a {
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: var(--dark-color);
+    }
+    
+    /* Стили для sticky-контейнера */
+    @media (max-width: 991px) {
+        .sticky-top {
+            position: relative;
+            top: 0 !important;
+        }
+    }
+</style>
+{% endblock %}

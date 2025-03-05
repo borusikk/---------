@@ -1,0 +1,617 @@
+{% extends 'base.html' %} {% block title %}🏆 Головна - Рейтинг викладачів та
+кафедр{% endblock %} {% block content %}
+<div class="container mt-4">
+  <!-- Hero секция -->
+  <div class="row mb-5 animate-fade-in">
+    <div class="col-lg-12 text-center">
+      <h1
+        class="display-4 fw-bold mb-3"
+        style="
+          background: linear-gradient(
+            135deg,
+            var(--primary-color),
+            var(--secondary-color)
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        "
+      >
+        Рейтинг викладачів ХНУРЕ
+      </h1>
+      <p class="lead mb-4 text-muted">
+        Знайдіть найкращих викладачів та відгуки студентів про них
+      </p>
+
+      <div
+        class="search-container position-relative mx-auto"
+        style="max-width: 600px"
+      >
+        <div class="input-group mb-3 shadow-lg">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-primary"></i>
+          </span>
+          <input
+            type="text"
+            id="search-input"
+            class="form-control border-start-0"
+            placeholder="Введіть прізвище викладача..."
+            aria-label="Search"
+            style="
+              border-radius: 0 10px 10px 0;
+              font-size: 1.1rem;
+              padding: 0.75rem 1rem;
+            "
+          />
+        </div>
+        <div
+          id="autocomplete-results"
+          class="list-group position-absolute w-100 mt-1 shadow-lg"
+          style="
+            z-index: 9999;
+            border-radius: 10px;
+            top: 100%;
+            background: white;
+          "
+        ></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Статистика -->
+  <div class="row mb-4" style="z-index: 0">
+    <div class="col-lg-12 mb-4">
+      <div class="row text-center">
+        <div class="col-md-4 mb-3">
+          <div
+            class="card h-100 py-4 animate-fade-in"
+            style="
+              border-radius: 15px;
+              background: linear-gradient(145deg, #ffffff, var(--light-color));
+            "
+          >
+            <div class="card-body">
+              <div
+                class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3"
+                style="width: 80px; height: 80px"
+              >
+                <i class="fas fa-user-tie fa-2x text-white"></i>
+              </div>
+              <h3 class="card-title">{{ total_professors }}</h3>
+              <p class="card-text text-muted">Викладачів у базі</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div
+            class="card h-100 py-4 animate-fade-in"
+            style="
+              border-radius: 15px;
+              background: linear-gradient(145deg, #ffffff, var(--light-color));
+            "
+          >
+            <div class="card-body">
+              <div
+                class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3"
+                style="width: 80px; height: 80px"
+              >
+                <i class="fas fa-comment-dots fa-2x text-white"></i>
+              </div>
+              <h3 class="card-title">{{ total_reviews }}+</h3>
+              <p class="card-text text-muted">Відгуків від студентів</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div
+            class="card h-100 py-4 animate-fade-in"
+            style="
+              border-radius: 15px;
+              background: linear-gradient(145deg, #ffffff, var(--light-color));
+            "
+          >
+            <div class="card-body">
+              <div
+                class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3"
+                style="width: 80px; height: 80px"
+              >
+                <i class="fas fa-building fa-2x text-white"></i>
+              </div>
+              <h3 class="card-title">{{ total_departments }}</h3>
+              <p class="card-text text-muted">Кафедр університету</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- ТОП-5 Викладачів -->
+    <div class="col-md-6 mb-4">
+      <div
+        class="card shadow h-100 animate-fade-in"
+        style="border-radius: 15px; overflow: hidden"
+      >
+        <div class="card-header bg-white border-bottom-0 pt-4">
+          <h3
+            class="card-title text-center"
+            style="
+              background: linear-gradient(
+                135deg,
+                var(--primary-color),
+                var(--secondary-color)
+              );
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+            "
+          >
+            <i class="fas fa-medal me-2"></i>ТОП-5 Викладачів
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      var(--primary-color),
+                      var(--dark-color)
+                    );
+                    color: white;
+                  "
+                >
+                  <th class="text-white">Фото</th>
+                  <th class="text-white">Ім'я</th>
+                  <th class="text-white">Рейтинг</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for professor in top_professors %}
+                <tr>
+                  <td>
+                    <img
+                      src="{{ professor.photo.url }}"
+                      class="rounded-circle"
+                      alt="{{ professor.name }}"
+                      style="width: 50px; height: 50px; object-fit: cover"
+                    />
+                  </td>
+                  <td>
+                    <a
+                      href="{% url 'professor_detail' professor.id %}"
+                      class="text-decoration-none fw-medium"
+                    >
+                      {{ professor.name }}
+                    </a>
+                  </td>
+                  <td>
+                    <div class="rating-stars">
+                      {{ professor.avg_rating|floatformat:1 }}
+                      <i class="fas fa-star"></i>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ТОП-5 Кафедр -->
+    <div class="col-md-6 mb-4">
+      <div
+        class="card shadow h-100 animate-fade-in"
+        style="border-radius: 15px; overflow: hidden"
+      >
+        <div class="card-header bg-white border-bottom-0 pt-4">
+          <h3
+            class="card-title text-center"
+            style="
+              background: linear-gradient(
+                135deg,
+                var(--primary-color),
+                var(--secondary-color)
+              );
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+            "
+          >
+            <i class="fas fa-university me-2"></i>ТОП-5 Кафедр
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      var(--primary-color),
+                      var(--dark-color)
+                    );
+                    color: white;
+                  "
+                >
+                  <th class="text-white">Кафедра</th>
+                  <th class="text-white">Рейтинг</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for department in top_departments %}
+                <tr>
+                  <td>
+                    <a
+                      href="{% url 'department_detail' department.id %}"
+                      class="text-decoration-none fw-medium"
+                    >
+                      {{ department.name }}
+                    </a>
+                  </td>
+                  <td>
+                    <div class="rating-stars">
+                      {{ department.avg_rating|floatformat:1 }}
+                      <i class="fas fa-star"></i>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="text-center mt-3">
+            <a
+              href="{% url 'department_ranking' %}"
+              class="btn btn-primary"
+              style="
+                background: linear-gradient(
+                  135deg,
+                  var(--primary-color),
+                  #2980b9
+                );
+              "
+            >
+              <i class="fas fa-chart-bar me-1"></i> Всі кафедри
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Как это работает -->
+  <div class="row mt-5 mb-4">
+    <div class="col-12">
+      <h2
+        class="text-center mb-4"
+        style="
+          background: linear-gradient(
+            135deg,
+            var(--primary-color),
+            var(--secondary-color)
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        "
+      >
+        Як це працює?
+      </h2>
+    </div>
+    <div class="col-md-4 mb-4">
+      <div
+        class="card h-100 text-center p-4 animate-fade-in"
+        style="
+          border-radius: 15px;
+          background: linear-gradient(145deg, #ffffff, var(--light-color));
+        "
+      >
+        <div class="card-body">
+          <div
+            class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-4"
+            style="width: 80px; height: 80px"
+          >
+            <i class="fas fa-search fa-2x text-white"></i>
+          </div>
+          <h4>Знайдіть викладача</h4>
+          <p class="text-muted">
+            Скористайтесь пошуком, щоб знайти викладача за ім'ям
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-4">
+      <div
+        class="card h-100 text-center p-4 animate-fade-in"
+        style="
+          border-radius: 15px;
+          background: linear-gradient(145deg, #ffffff, var(--light-color));
+        "
+      >
+        <div class="card-body">
+          <div
+            class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-4"
+            style="width: 80px; height: 80px"
+          >
+            <i class="fas fa-star fa-2x text-white"></i>
+          </div>
+          <h4>Оцініть викладача</h4>
+          <p class="text-muted">
+            Поділіться своїм досвідом та оцініть професіоналізм викладача
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-4">
+      <div
+        class="card h-100 text-center p-4 animate-fade-in"
+        style="
+          border-radius: 15px;
+          background: linear-gradient(145deg, #ffffff, var(--light-color));
+        "
+      >
+        <div class="card-body">
+          <div
+            class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-4"
+            style="width: 80px; height: 80px"
+          >
+            <i class="fas fa-thumbs-up fa-2x text-white"></i>
+          </div>
+          <h4>Допоможіть іншим</h4>
+          <p class="text-muted">
+            Ваші відгуки допомагають студентам обрати найкращих викладачів
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .card {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .btn {
+    transition: all 0.3s ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.05);
+  }
+
+  .rating-stars {
+    color: #f1c40f;
+    font-weight: bold;
+  }
+
+  .search-container {
+    position: relative;
+    z-index: 9999;
+  }
+
+  .search-container .input-group {
+    transition: all 0.3s ease;
+  }
+
+  .search-container .input-group:focus-within {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .search-container input::placeholder {
+    color: #adb5bd;
+    font-style: italic;
+  }
+
+  .search-container .input-group-text {
+    padding-left: 1.25rem;
+    padding-right: 0.5rem;
+  }
+
+  #autocomplete-results {
+    position: absolute;
+    width: 100%;
+    top: 100%;
+    left: 0;
+    z-index: 9999;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+  }
+
+  #autocomplete-results.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  #autocomplete-results::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #autocomplete-results::-webkit-scrollbar-track {
+    background: var(--light-color);
+    border-radius: 10px;
+  }
+
+  #autocomplete-results::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+  }
+
+  .list-group-item {
+    transition: all 0.3s ease;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    background: transparent;
+  }
+
+  .list-group-item:hover {
+    background: linear-gradient(145deg, var(--light-color), #ffffff);
+    transform: translateX(5px);
+  }
+
+  .list-group-item .rating-stars {
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding: 0.25rem 0.5rem;
+    border-radius: 5px;
+    font-weight: bold;
+  }
+
+  .row {
+    position: relative;
+    z-index: 1;
+  }
+</style>
+
+<!-- JS для автозаповнення пошуку -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("search-input");
+    const resultsBox = document.getElementById("autocomplete-results");
+    let searchTimeout;
+
+    searchInput.addEventListener("input", function () {
+      clearTimeout(searchTimeout);
+      let query = searchInput.value.trim();
+
+      if (query.length > 1) {
+        searchTimeout = setTimeout(() => {
+          fetch(`/autocomplete/?q=${query}`)
+            .then((response) => response.json())
+            .then((data) => {
+              resultsBox.innerHTML = "";
+              resultsBox.classList.add("show");
+
+              if (data.results.length === 0) {
+                let emptyItem = document.createElement("div");
+                emptyItem.classList.add(
+                  "list-group-item",
+                  "text-center",
+                  "text-muted"
+                );
+                emptyItem.innerHTML =
+                  '<i class="fas fa-search me-2"></i>Викладачів не знайдено';
+                resultsBox.appendChild(emptyItem);
+                return;
+              }
+
+              data.results.forEach((professor) => {
+                let item = document.createElement("a");
+                item.href = `/professor/${professor.id}/`;
+                item.classList.add(
+                  "list-group-item",
+                  "list-group-item-action",
+                  "d-flex",
+                  "align-items-center"
+                );
+
+                let avatar = document.createElement("img");
+                avatar.src = professor.photo;
+                avatar.classList.add("rounded-circle", "me-3");
+                avatar.style.width = "40px";
+                avatar.style.height = "40px";
+                avatar.style.objectFit = "cover";
+                avatar.onerror = function () {
+                  this.src = "https://via.placeholder.com/40x40?text=👤";
+                };
+
+                let infoDiv = document.createElement("div");
+                infoDiv.classList.add(
+                  "d-flex",
+                  "justify-content-between",
+                  "align-items-center",
+                  "w-100"
+                );
+
+                let nameSpan = document.createElement("span");
+                nameSpan.textContent = professor.name;
+                nameSpan.classList.add("fw-medium");
+
+                let ratingSpan = document.createElement("span");
+                ratingSpan.classList.add("rating-stars");
+                ratingSpan.innerHTML = `${professor.avg_rating} <i class="fas fa-star"></i>`;
+
+                infoDiv.appendChild(nameSpan);
+                infoDiv.appendChild(ratingSpan);
+
+                item.appendChild(avatar);
+                item.appendChild(infoDiv);
+
+                resultsBox.appendChild(item);
+              });
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              resultsBox.innerHTML =
+                '<div class="list-group-item text-center text-danger"><i class="fas fa-exclamation-circle me-2"></i>Помилка при пошуку</div>';
+            });
+        }, 300); // Добавляем задержку для оптимизации запросов
+      } else {
+        resultsBox.innerHTML = "";
+        resultsBox.classList.remove("show");
+      }
+    });
+
+    // Улучшенная обработка кликов вне поиска
+    document.addEventListener("click", function (event) {
+      if (
+        !searchInput.contains(event.target) &&
+        !resultsBox.contains(event.target)
+      ) {
+        resultsBox.innerHTML = "";
+        resultsBox.classList.remove("show");
+      }
+    });
+
+    // Обработка клавиш
+    searchInput.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        resultsBox.innerHTML = "";
+        resultsBox.classList.remove("show");
+        searchInput.blur();
+      }
+    });
+  });
+</script>
+{% endblock %}

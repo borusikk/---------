@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Система рейтингів{% endblock %}</title>
+
+    <!-- Подключение Bootstrap 5.3 -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+
+    <!-- Google Fonts - Подключаем современные шрифты -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome для красивых иконок -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Стили -->
+    <style>
+      :root {
+        --primary-color: #3498db;
+        --secondary-color: #2ecc71;
+        --accent-color: #1abc9c;
+        --dark-color: #2c3e50;
+        --light-color: #f8f9fa;
+        --text-color: #333333;
+        --light-gray: #ecf0f1;
+        --medium-gray: #bdc3c7;
+        --gradient-primary: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        --gradient-dark: linear-gradient(135deg, var(--dark-color), #34495e);
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --box-shadow-hover: 0 10px 15px rgba(0, 0, 0, 0.15);
+        --transition: all 0.3s ease;
+      }
+
+      body {
+        font-family: "Open Sans", sans-serif;
+        background-color: var(--light-color);
+        color: var(--text-color);
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        line-height: 1.6;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      .navbar-brand {
+        font-family: "Montserrat", sans-serif;
+        font-weight: 600;
+      }
+
+      /* Улучшенная навигация */
+      .navbar {
+        background: var(--gradient-dark);
+        box-shadow: var(--box-shadow);
+        padding: 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+
+      .navbar-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        padding: 0.5rem 0;
+      }
+
+      .nav-link {
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        margin: 0 0.2rem;
+        border-radius: 8px;
+        transition: var(--transition);
+        position: relative;
+        color: rgba(255, 255, 255, 0.9) !important;
+      }
+
+      .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+        color: white !important;
+      }
+
+      .nav-link.active {
+        background: rgba(255, 255, 255, 0.2);
+        color: white !important;
+      }
+
+      .nav-link i {
+        margin-right: 5px;
+        transition: var(--transition);
+      }
+
+      .nav-link:hover i {
+        transform: scale(1.2);
+      }
+
+      /* Контентный блок */
+      .container {
+        max-width: 1200px;
+        flex: 1;
+        padding: 2rem 1rem;
+        animation: fadeIn 0.5s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Улучшение карточек */
+      .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+        background: white;
+        overflow: hidden;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--box-shadow-hover);
+      }
+
+      .card-header {
+        background: transparent;
+        border-bottom: 1px solid var(--light-gray);
+        padding: 1.5rem;
+      }
+
+      .card-body {
+        padding: 1.5rem;
+      }
+
+      /* Красивые кнопки */
+      .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+      }
+
+      .btn:hover::after {
+        width: 200%;
+        height: 200%;
+      }
+
+      .btn-primary {
+        background: var(--gradient-primary);
+        border: none;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--box-shadow);
+      }
+
+      /* Улучшенные таблицы */
+      .table {
+        margin: 0;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .table thead th {
+        background: var(--gradient-dark);
+        color: white;
+        font-weight: 600;
+        padding: 1rem;
+        border: none;
+      }
+
+      .table tbody tr {
+        transition: var(--transition);
+      }
+
+      .table tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.05);
+        transform: scale(1.01);
+      }
+
+      .table td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-color: var(--light-gray);
+      }
+
+      /* Формы */
+      .form-control {
+        border-radius: 8px;
+        border: 1px solid var(--medium-gray);
+        padding: 0.75rem 1rem;
+        transition: var(--transition);
+        font-size: 1rem;
+      }
+
+      .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        transform: translateY(-2px);
+      }
+
+      /* Футер */
+      footer {
+        background: var(--gradient-dark);
+        color: white;
+        padding: 2rem 0;
+        margin-top: auto;
+        position: relative;
+        overflow: hidden;
+      }
+
+      footer::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          to right,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+      }
+
+      .footer-link {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-weight: 500;
+        text-decoration: none !important;
+        transition: var(--transition);
+        margin: 0 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .footer-link:hover {
+        color: white !important;
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .footer-link i {
+        margin-right: 0.5rem;
+        transition: var(--transition);
+      }
+
+      .footer-link:hover i {
+        transform: scale(1.2);
+      }
+
+      /* Рейтинги и звезды */
+      .rating-stars {
+        color: #f1c40f;
+        font-size: 1.2rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .rating-stars i {
+        transition: var(--transition);
+      }
+
+      .rating-stars:hover i {
+        transform: rotate(72deg);
+      }
+
+      /* Адаптивный дизайн */
+      @media (max-width: 768px) {
+        .navbar {
+          padding: 0.5rem;
+        }
+
+        .navbar-brand {
+          font-size: 1.2rem;
+        }
+
+        .container {
+          padding: 1rem;
+        }
+
+        .btn {
+          padding: 0.5rem 1rem;
+        }
+
+        .footer-link {
+          margin: 0.25rem;
+          padding: 0.25rem 0.5rem;
+          font-size: 0.9rem;
+        }
+      }
+
+      /* Анимации */
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .animate-pulse {
+        animation: pulse 2s infinite;
+      }
+
+      /* Дополнительные улучшения */
+      ::selection {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--light-color);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--secondary-color);
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">
+          <i class="fas fa-university me-2"></i>NURE-RATING
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a
+                class="nav-link {% if request.path == '/' %}active{% endif %}"
+                href="{% url 'home' %}"
+              >
+                <i class="fas fa-home"></i> Головна
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link {% if 'department_ranking' in request.path %}active{% endif %}"
+                href="{% url 'department_ranking' %}"
+              >
+                <i class="fas fa-chart-line"></i> Рейтинг кафедр
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link {% if 'donate' in request.path %}active{% endif %}"
+                href="{% url 'donate' %}"
+              >
+                <i class="fas fa-hand-holding-heart"></i> Підтримати проєкт
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">{% block content %} {% endblock %}</div>
+
+    <footer>
+      <div class="container">
+        <p class="mb-3 text-center">© 2025 NURE-RATING. Всі права захищені.</p>
+        <div class="text-center">
+          <a href="{% url 'donate' %}" class="footer-link">
+            <i class="fas fa-hand-holding-heart"></i> Підтримати проєкт
+          </a>
+          <a href="mailto:wwork8655@gmail.com" class="footer-link">
+            <i class="fas fa-envelope"></i> Контакти
+          </a>
+          <a href="{% url 'privacy_policy' %}" class="footer-link">
+            <i class="fas fa-shield-alt"></i> Політика конфіденційності
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Анимация появления элементов при загрузке страницы
+      document.addEventListener("DOMContentLoaded", function () {
+        const cards = document.querySelectorAll(".card");
+        cards.forEach((card, index) => {
+          card.style.opacity = "0";
+          card.style.transform = "translateY(20px)";
+          setTimeout(() => {
+            card.style.transition = "all 0.5s ease";
+            card.style.opacity = "1";
+            card.style.transform = "translateY(0)";
+          }, index * 100);
+        });
+      });
+
+      // Активация текущего пункта меню
+      document.addEventListener("DOMContentLoaded", function () {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll(".nav-link");
+
+        navLinks.forEach((link) => {
+          if (link.getAttribute("href") === currentPath) {
+            link.classList.add("active");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
